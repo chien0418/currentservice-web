@@ -102,7 +102,7 @@ function borderAll(ws: ExcelJS.Worksheet, fromRow: number, toRow: number, fromCo
 function clearBorders(ws: ExcelJS.Worksheet, fromRow: number, toRow: number, fromCol: number, toCol: number) {
   for (let r = fromRow; r <= toRow; r++) {
     for (let c = fromCol; c <= toCol; c++) {
-      ws.getCell(r, c).border = undefined;
+      ws.getCell(r, c).border = {};
     }
   }
 }
@@ -619,7 +619,7 @@ function buildMonthlyWorkerSheet(
 
   const sites = Array.from(agg.entries())
     .map(([site_name, v]) => ({ site_name, ...v }))
-    .sort((a,b) => a.site_name.localeCompare(b.site_name, 'ja'));
+    .sort((a, b) => a.site_name.localeCompare(b.site_name, 'ja'));
 
   const start2 = lastDay + 3;
   ws.mergeCells(`A${start2}:H${start2}`);
@@ -787,7 +787,7 @@ function buildGenbaSiteSheet(
     ws.getRow(rr).height = 18;
     setRowStyle(ws, rr, { font: { size: 11, name: 'Yu Gothic' }, alignment: { vertical: 'middle' } });
   }
-  for (const addr of ['A2','A3','A4','A5','A6','C6']) {
+  for (const addr of ['A2', 'A3', 'A4', 'A5', 'A6', 'C6']) {
     ws.getCell(addr).font = { bold: true, size: 11, name: 'Yu Gothic' };
   }
 
@@ -807,12 +807,12 @@ function buildGenbaSiteSheet(
   ws.getRow(12).values = ['', '残り（現場★）', '残り（製造★）', '残り（総合★）'];
   ws.getRow(13).values = ['', remG, remS, remT];
 
-  for (const rr of [8,10,12]) {
+  for (const rr of [8, 10, 12]) {
     ws.getRow(rr).font = { bold: true, name: 'Yu Gothic' };
     ws.getRow(rr).alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(rr).height = 18;
   }
-  for (const rr of [9,11,13]) {
+  for (const rr of [9, 11, 13]) {
     ws.getRow(rr).alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(rr).height = 18;
   }
@@ -834,7 +834,7 @@ function buildGenbaSiteSheet(
   }
 
   // Total row
-  const sum = (k: 'genba'|'seizo'|'total') => workers.reduce((a,b) => a + Number((b as any)[k] ?? 0), 0);
+  const sum = (k: 'genba' | 'seizo' | 'total') => workers.reduce((a, b) => a + Number((b as any)[k] ?? 0), 0);
   ws.getRow(r).values = ['総合', sum('genba'), sum('seizo'), sum('total')];
   ws.getRow(r).font = { bold: true, name: 'Yu Gothic' };
   ws.getRow(r).alignment = { horizontal: 'center', vertical: 'middle' };
@@ -867,7 +867,16 @@ export async function GET(req: Request) {
   wb.created = new Date();
 
   // Make Japanese printable by default
-  wb.views = [{ x: 0, y: 0, width: 10000, height: 20000, activeTab: 0 }];
+  wb.views = [{
+    x: 0,
+    y: 0,
+    width: 10000,
+    height: 20000,
+    firstSheet: 0,
+    activeTab: 0,
+    visibility: "visible",
+  }];
+
 
   try {
     if (type === "daily_day") {
@@ -1078,7 +1087,7 @@ export async function GET(req: Request) {
       buildGenbaAllSheet(ws, rows);
 
       const buf = await wb.xlsx.writeBuffer();
-      const filename = `工事一覧_全期間_${new Date().toISOString().slice(0,10)}.xlsx`;
+      const filename = `工事一覧_全期間_${new Date().toISOString().slice(0, 10)}.xlsx`;
       return new NextResponse(buf, {
         status: 200,
         headers: {
@@ -1133,7 +1142,7 @@ export async function GET(req: Request) {
       buildGenbaSiteSheet(ws, site_name, master, workers, nowG, nowS);
 
       const buf = await wb.xlsx.writeBuffer();
-      const filename = `現場_${site_name}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      const filename = `現場_${site_name}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       return new NextResponse(buf, {
         status: 200,
         headers: {
