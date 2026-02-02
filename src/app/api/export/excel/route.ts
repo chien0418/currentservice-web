@@ -874,7 +874,7 @@ export async function GET(req: Request) {
     height: 20000,
     firstSheet: 0,
     activeTab: 0,
-    visibility: "visible",
+    visibility: 'visible'
   }];
 
 
