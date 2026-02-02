@@ -161,36 +161,13 @@ export default async function Home(props: {
           {/* ✅ 1-1: この画面では上の集計BOX（総★ / 距離など）を表示しない */}
 
           <div style={styles.headerBtns}>
-            {/* Action panel (Màn 1-1) */}
             <Link
               href={`/genba?cycle_ym=${encodeURIComponent(cycle_ym)}`}
               style={styles.btnPrimary}
             >
-              現場管理
+              現場管理へ
             </Link>
-
-            <Link
-              href={`/submit-status?cycle_ym=${encodeURIComponent(cycle_ym)}`}
-              style={styles.btnPrimary2}
-            >
-              日報提出状況
-            </Link>
-
-            {/* 3 buttons reserved for future expansion */}
-            <span title="準備中" style={styles.btnDisabled}>
-              進捗管理（予定）
-            </span>
-            <span title="準備中" style={styles.btnDisabled}>
-              原価・ムダ確認
-            </span>
-            <span title="準備中" style={styles.btnDisabled}>
-              帳票・出力管理
-            </span>
-
-            <Link
-              href={`/?cycle_ym=${encodeURIComponent(cycle_ym)}`}
-              style={styles.btnGhost}
-            >
+            <Link href={`/?cycle_ym=${encodeURIComponent(cycle_ym)}`} style={styles.btnGhost}>
               更新
             </Link>
           </div>
@@ -414,27 +391,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "10px 14px",
     borderRadius: 12,
     whiteSpace: "nowrap",
-  },
-  btnPrimary2: {
-    textDecoration: "none",
-    fontWeight: 900,
-    color: "#111",
-    background: "#bfe6ff", // light blue
-    border: "2px solid #111",
-    padding: "10px 14px",
-    borderRadius: 12,
-    whiteSpace: "nowrap",
-  },
-  btnDisabled: {
-    fontWeight: 900,
-    color: "#666",
-    background: "#efefef",
-    border: "2px dashed #888",
-    padding: "10px 14px",
-    borderRadius: 12,
-    whiteSpace: "nowrap",
-    cursor: "not-allowed",
-    userSelect: "none",
   },
   btnGhost: {
     textDecoration: "none",
