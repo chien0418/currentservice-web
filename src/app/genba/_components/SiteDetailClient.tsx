@@ -23,6 +23,71 @@ export type WorkerRow = {
   total: number;
 };
 
+function pctText(now: number, plan: number) {
+  const p = Math.max(0, plan || 0);
+  const n = Math.max(0, now || 0);
+  if (p === 0) return "—";
+  const pct = Math.round((n / p) * 100);
+  return `${pct}%`;
+}
+
+function clamp01(x: number) {
+  return Math.max(0, Math.min(1, x));
+}
+
+function PipeProgress(props: {
+  label: string;
+  plan: number;
+  now: number;
+  tone: "genba" | "seizo";
+}) {
+  const plan = Math.max(0, props.plan || 0);
+  const now = Math.max(0, props.now || 0);
+
+  const achieved = plan === 0 ? 0 : clamp01(now / plan); // 0..1 (green)
+  const overRaw = plan === 0 ? 0 : (now - plan) / plan; // can be >0
+  const over = clamp01(Math.max(0, overRaw)); // 0..1 == 100% over (200% total)
+
+  const isOver = now > plan && plan > 0;
+
+  const tone = props.tone === "genba" ? styles.pipeGenba : styles.pipeSeizo;
+
+  const mainText =
+    plan === 0 ? "予定★0" : `★${now}/${plan}  (${pctText(now, plan)})`;
+
+  const overText =
+    !isOver ? "" : `超過 ★${now - plan}  (+${Math.round(((now - plan) / plan) * 100)}%)`;
+
+  return (
+    <div style={styles.pipeCard}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ ...styles.pipeLabel, ...(tone as any) }}>{props.label}</div>
+        <div style={styles.pipeMeta}>{mainText}</div>
+      </div>
+
+      {/* main pipe: green (done) + yellow (remaining) */}
+      <div style={styles.pipeOuter}>
+        <div style={{ ...styles.pipeDone, width: `${achieved * 100}%`, ...(tone as any) }} />
+        <div style={styles.pipeText}>{plan === 0 ? "—" : `${Math.min(100, Math.round((now / plan) * 100))}%`}</div>
+      </div>
+
+      {/* over pipe: red fill appears when >100% (max 200%) */}
+      {isOver ? (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div style={{ ...styles.pipeLabel, ...styles.pipeOverLabel }}>超過</div>
+            <div style={styles.pipeMeta}>{overText}</div>
+          </div>
+          <div style={styles.pipeOuter}>
+            <div style={{ ...styles.pipeOver, width: `${over * 100}%` }} />
+            <div style={styles.pipeText}>{`${Math.min(200, Math.round((now / plan) * 100))}%`}</div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function SiteDetailClient(props: {
   site_name: string;
   master: Master | null;
@@ -167,6 +232,13 @@ export default function SiteDetailClient(props: {
             </div>
           ))}
         </div>
+
+{/* 進捗パイプ（現場／製造）: 緑=達成、黄=残り(予定100%)、超過は下に赤(最大200%) */}
+        <div style={styles.pipeGrid}>
+          <PipeProgress label="現場" plan={planG} now={nowG} tone="genba" />
+          <PipeProgress label="製造" plan={planS} now={nowS} tone="seizo" />
+        </div>
+
       </div>
 
       {/* workers (click whole row) */}
@@ -339,4 +411,63 @@ const styles: Record<string, React.CSSProperties> = {
 
   colGenba: { background: "linear-gradient(90deg,#dbeafe 0%,#bfdbfe 50%,#dbeafe 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
   colSeizo: { background: "linear-gradient(90deg,#fef3c7 0%,#fde68a 50%,#fef3c7 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
+
+
+  // --- Pipe progress (現場/製造) ---
+  pipeGrid: {
+    marginTop: 14,
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: 12,
+    maxWidth: 980,
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+  pipeCard: {
+    border: "2px solid #111",
+    borderRadius: 14,
+    padding: 12,
+    background: "#fff",
+  },
+  pipeLabel: {
+    fontWeight: 900,
+    padding: "4px 10px",
+    borderRadius: 999,
+    border: "2px solid #111",
+    background: "#f0f0f0",
+    whiteSpace: "nowrap",
+  },
+  pipeMeta: { fontWeight: 900, fontSize: 13, whiteSpace: "nowrap" },
+  pipeOuter: {
+    marginTop: 8,
+    height: 18,
+    borderRadius: 999,
+    border: "2px solid #111",
+    overflow: "hidden",
+    background: "linear-gradient(90deg,#fde68a 0%,#fef3c7 50%,#fde68a 100%)", // yellow = remaining (100%=予定)
+    position: "relative",
+    boxShadow: "inset 0 2px 6px rgba(0,0,0,.10)",
+  },
+  pipeDone: {
+    height: "100%",
+    background: "linear-gradient(90deg, rgba(34,197,94,.35) 0%, rgba(34,197,94,.80) 50%, rgba(34,197,94,.35) 100%)",
+  },
+  pipeText: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 900,
+    fontSize: 12,
+    textShadow: "0 1px 0 rgba(255,255,255,.7)",
+    pointerEvents: "none",
+  },
+  pipeOverLabel: { background: "#ffe4e6" },
+  pipeOver: {
+    height: "100%",
+    background: "linear-gradient(90deg, rgba(239,68,68,.25) 0%, rgba(239,68,68,.85) 50%, rgba(239,68,68,.25) 100%)",
+  },
+  pipeGenba: { background: "#dbeafe" },
+  pipeSeizo: { background: "#fef3c7" },
 };
