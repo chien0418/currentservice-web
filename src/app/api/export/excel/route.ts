@@ -2,6 +2,11 @@ import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
+const THEME = {
+  headerFill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFF6FF" } },
+  tableHeadFill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } },
+};
+
 // =====================
 // Helpers
 // =====================
@@ -110,13 +115,14 @@ function clearBorders(ws: ExcelJS.Worksheet, fromRow: number, toRow: number, fro
 function setRowStyle(
   ws: ExcelJS.Worksheet,
   row: number,
-  opts: { height?: number; font?: Partial<ExcelJS.Font>; alignment?: Partial<ExcelJS.Alignment> }
+  opts: { height?: number; font?: Partial<ExcelJS.Font>; alignment?: Partial<ExcelJS.Alignment>; fill?: Partial<ExcelJS.Fill> }
 ) {
   const rr = ws.getRow(row);
   if (opts.height) rr.height = opts.height;
   rr.eachCell({ includeEmpty: true }, (cell) => {
     if (opts.font) cell.font = { ...(cell.font ?? {}), ...opts.font } as any;
     if (opts.alignment) cell.alignment = { ...(cell.alignment ?? {}), ...opts.alignment } as any;
+    if (opts.fill) cell.fill = { ...(cell.fill ?? {}), ...opts.fill } as any;
   });
 }
 
@@ -238,6 +244,7 @@ function buildDailySheet(ws: ExcelJS.Worksheet, header: DayHeader, details: DayD
     setRowStyle(ws, rr, {
       font: { size: 11, name: "Yu Gothic" },
       alignment: { vertical: "middle" },
+      fill: THEME.headerFill as any,
     });
   }
   ws.getCell("A2").font = { bold: true, size: 12, name: "Yu Gothic" };
@@ -559,6 +566,7 @@ function buildMonthlyWorkerSheet(
     setRowStyle(ws, rr, {
       font: { size: 11, name: "Yu Gothic" },
       alignment: { vertical: "middle" },
+      fill: THEME.headerFill as any,
     });
   }
   for (const addr of ["A2", "A3", "A4", "A5", "A6", "D2", "D4", "D5", "D6"]) {
@@ -785,7 +793,7 @@ function buildGenbaSiteSheet(
   // Meta styling (no borders)
   for (const rr of [2, 3, 4, 5, 6]) {
     ws.getRow(rr).height = 18;
-    setRowStyle(ws, rr, { font: { size: 11, name: 'Yu Gothic' }, alignment: { vertical: 'middle' } });
+    setRowStyle(ws, rr, { font: { size: 11, name: 'Yu Gothic' }, alignment: { vertical: 'middle' }, fill: THEME.headerFill as any });
   }
   for (const addr of ['A2', 'A3', 'A4', 'A5', 'A6', 'C6']) {
     ws.getCell(addr).font = { bold: true, size: 11, name: 'Yu Gothic' };

@@ -240,6 +240,8 @@ const styles: Record<string, React.CSSProperties> = {
             'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
         background: "#f3f6fb",
         minHeight: "100vh",
+    maxWidth: 1200,
+    margin: "0 auto",
         fontSize: 15, // ✅ +2 (từ ~13 lên 15)
     },
 

@@ -180,6 +180,7 @@ export default async function SubmitStatusPage(props: {
 
       <div style={styles.card}>
         <div style={styles.tableWrap}>
+          <div style={styles.tableScroll} className="scroll-x">
           <div style={styles.table}>
             {/* header row */}
             <div style={{ ...styles.row, ...styles.rowHead }}>
@@ -252,6 +253,7 @@ export default async function SubmitStatusPage(props: {
               );
             })}
           </div>
+          </div>
         </div>
       </div>
     </main>
@@ -260,9 +262,11 @@ export default async function SubmitStatusPage(props: {
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: 16,
+    padding: "clamp(12px, 3vw, 20px)",
     background: "#f3f6fb",
     minHeight: "100vh",
+    maxWidth: 1200,
+    margin: "0 auto",
     fontFamily:
       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
     color: "#111",
@@ -311,6 +315,15 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   tableWrap: {
+    maxWidth: "100%",
+    overflow: "auto",
+    borderRadius: 12,
+    border: "2px solid #111",
+  },
+  tableScroll: { marginTop: 10, borderRadius: 10, maxWidth: "100%", overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch" },
+
+  /* legacy */
+  tableWrapLegacy: {
     overflow: "auto",
     borderRadius: 12,
     border: "2px solid #111",

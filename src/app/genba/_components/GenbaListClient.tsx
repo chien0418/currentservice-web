@@ -81,7 +81,8 @@ export default function GenbaListClient(props: {
       <div style={styles.card}>
         <div style={styles.cardTitle}>工事一覧（site_name で自動集計）</div>
 
-        <div style={styles.table}>
+        <div style={styles.tableScroll} className="scroll-x">
+          <div style={styles.table}>
           {/* header top */}
           <div style={{ ...styles.row, ...styles.rowHeadTop }}>
             <div style={{ ...styles.cell, width: 220 }}>現場名</div>
@@ -153,6 +154,7 @@ export default function GenbaListClient(props: {
             <div style={{ ...styles.cell, width: 150, borderRight: "none", fontWeight: 900 }}>{totals.remAll}</div>
           </div>
         </div>
+          </div>
 
         <div style={{ marginTop: 10, opacity: 0.8, fontWeight: 800 }}>
           ※ 行全体クリックで詳細へ（どこを押してもOK）
@@ -164,9 +166,11 @@ export default function GenbaListClient(props: {
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: 16,
+    padding: "clamp(12px, 3vw, 20px)",
     background: "#f3f6fb",
     minHeight: "100vh",
+    maxWidth: 1200,
+    margin: "0 auto",
     fontFamily:
       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
     color: "#111",
@@ -229,6 +233,7 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: { fontSize: 18, fontWeight: 900, marginBottom: 10 },
 
   table: { border: "2px solid #111", borderRadius: 10, overflow: "hidden" },
+  tableScroll: { marginTop: 10, borderRadius: 10, maxWidth: "100%", overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch" },
   row: { display: "flex", alignItems: "stretch" },
   rowHeadTop: { background: "#f6d7c8", borderBottom: "2px solid #111", fontWeight: 900 },
   rowHeadSub: { background: "#cfe8ff", borderBottom: "2px solid #111", fontWeight: 900 },

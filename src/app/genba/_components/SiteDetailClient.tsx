@@ -173,9 +173,10 @@ export default function SiteDetailClient(props: {
       <div style={styles.card}>
         <div style={styles.cardTitle}>作業者</div>
 
-        <div style={styles.table}>
+        <div style={styles.tableScroll} className="scroll-x">
+            <div style={styles.table}>
           <div style={{ ...styles.row, background: "#cfe8ff", borderBottom: "2px solid #111", fontWeight: 900 }}>
-            <div style={{ ...styles.cell, width: 260 }}>作業者</div>
+            <div style={{ ...styles.cell, ...styles.stickyColHeader, width: 260 }}>作業者</div>
             <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>現場★数</div>
             <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>製造★数</div>
             <div style={{ ...styles.cell, width: 160, borderRight: "none" }}>総合★数</div>
@@ -192,7 +193,7 @@ export default function SiteDetailClient(props: {
                   background: i % 2 === 0 ? "#fff" : "#fbfdff",
                 }}
               >
-                <div style={{ ...styles.cell, width: 260, fontWeight: 900 }}>{w.reporter_name}</div>
+                <div style={{ ...styles.cell, ...styles.stickyCol, width: 260, fontWeight: 900 }}>{w.reporter_name}</div>
                 <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>{w.genba}</div>
                 <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>{w.seizo}</div>
                 <div style={{ ...styles.cell, width: 160, borderRight: "none", fontWeight: 900 }}>{w.total}</div>
@@ -207,6 +208,7 @@ export default function SiteDetailClient(props: {
             <div style={{ ...styles.cell, width: 160, borderRight: "none", fontWeight: 900 }}>{workerTotal.all}</div>
           </div>
         </div>
+            </div>
 
         <div style={{ marginTop: 10, opacity: 0.75, fontWeight: 800 }}>
           ※ 行全体クリックで日別へ
@@ -245,9 +247,11 @@ export default function SiteDetailClient(props: {
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: 16,
+    padding: "clamp(12px, 3vw, 20px)",
     background: "#f3f6fb",
     minHeight: "100vh",
+    maxWidth: 1200,
+    margin: "0 auto",
     fontFamily:
       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
     color: "#111",
@@ -308,6 +312,9 @@ const styles: Record<string, React.CSSProperties> = {
   saveRow: { marginTop: 10, display: "flex", gap: 12, justifyContent: "center", alignItems: "center", flexWrap: "wrap" },
 
   table: { border: "2px solid #111", borderRadius: 10, overflow: "hidden" },
+  tableScroll: { marginTop: 10, borderRadius: 10, maxWidth: "100%", overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch" },
+  stickyColHeader: { position: "sticky", left: 0, zIndex: 3, background: "#fff", boxShadow: "2px 0 0 rgba(0,0,0,.08)" },
+  stickyCol: { position: "sticky", left: 0, zIndex: 2, background: "#fff", boxShadow: "2px 0 0 rgba(0,0,0,.06)" },
   row: { display: "flex", alignItems: "stretch" },
   rowLink: {
     display: "flex",
@@ -330,6 +337,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
   },
 
-  colGenba: { background: "#e8f3ff" },
-  colSeizo: { background: "#fff2cc" },
+  colGenba: { background: "linear-gradient(90deg,#dbeafe 0%,#bfdbfe 50%,#dbeafe 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
+  colSeizo: { background: "linear-gradient(90deg,#fef3c7 0%,#fde68a 50%,#fef3c7 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
 };

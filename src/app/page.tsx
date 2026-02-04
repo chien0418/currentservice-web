@@ -277,9 +277,11 @@ export default async function Home(props: {
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: 16,
+    padding: "clamp(12px, 3vw, 20px)",
     background: "#f3f6fb",
     minHeight: "100vh",
+    maxWidth: 1200,
+    margin: "0 auto",
     fontFamily:
       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
     color: "#111",

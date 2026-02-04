@@ -1,0 +1,150 @@
+warning: in the working copy of 'src/app/api/export/excel/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/day-detail/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/day-list/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/genba/[site]/[reporter]/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/genba/_components/GenbaListClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/genba/_components/SiteDetailClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/submit-status/page.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/app/api/export/excel/route.ts b/src/app/api/export/excel/route.ts[m
+[1mindex e2f2a06..7914792 100644[m
+[1m--- a/src/app/api/export/excel/route.ts[m
+[1m+++ b/src/app/api/export/excel/route.ts[m
+[36m@@ -2,6 +2,11 @@[m [mimport ExcelJS from "exceljs";[m
+ import { NextResponse } from "next/server";[m
+ import { supabase } from "@/lib/supabaseClient";[m
+ [m
+[32m+[m[32mconst THEME = {[m
+[32m+[m[32m  headerFill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFF6FF" } },[m
+[32m+[m[32m  tableHeadFill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } },[m
+[32m+[m[32m};[m
+[32m+[m
+ // =====================[m
+ // Helpers[m
+ // =====================[m
+[36m@@ -110,13 +115,14 @@[m [mfunction clearBorders(ws: ExcelJS.Worksheet, fromRow: number, toRow: number, fro[m
+ function setRowStyle([m
+   ws: ExcelJS.Worksheet,[m
+   row: number,[m
+[31m-  opts: { height?: number; font?: Partial<ExcelJS.Font>; alignment?: Partial<ExcelJS.Alignment> }[m
+[32m+[m[32m  opts: { height?: number; font?: Partial<ExcelJS.Font>; alignment?: Partial<ExcelJS.Alignment>; fill?: Partial<ExcelJS.Fill> }[m
+ ) {[m
+   const rr = ws.getRow(row);[m
+   if (opts.height) rr.height = opts.height;[m
+   rr.eachCell({ includeEmpty: true }, (cell) => {[m
+     if (opts.font) cell.font = { ...(cell.font ?? {}), ...opts.font } as any;[m
+     if (opts.alignment) cell.alignment = { ...(cell.alignment ?? {}), ...opts.alignment } as any;[m
+[32m+[m[32m    if (opts.fill) cell.fill = { ...(cell.fill ?? {}), ...opts.fill } as any;[m
+   });[m
+ }[m
+ [m
+[36m@@ -238,6 +244,7 @@[m [mfunction buildDailySheet(ws: ExcelJS.Worksheet, header: DayHeader, details: DayD[m
+     setRowStyle(ws, rr, {[m
+       font: { size: 11, name: "Yu Gothic" },[m
+       alignment: { vertical: "middle" },[m
+[32m+[m[32m      fill: THEME.headerFill as any,[m
+     });[m
+   }[m
+   ws.getCell("A2").font = { bold: true, size: 12, name: "Yu Gothic" };[m
+[36m@@ -559,6 +566,7 @@[m [mfunction buildMonthlyWorkerSheet([m
+     setRowStyle(ws, rr, {[m
+       font: { size: 11, name: "Yu Gothic" },[m
+       alignment: { vertical: "middle" },[m
+[32m+[m[32m      fill: THEME.headerFill as any,[m
+     });[m
+   }[m
+   for (const addr of ["A2", "A3", "A4", "A5", "A6", "D2", "D4", "D5", "D6"]) {[m
+[36m@@ -785,7 +793,7 @@[m [mfunction buildGenbaSiteSheet([m
+   // Meta styling (no borders)[m
+   for (const rr of [2, 3, 4, 5, 6]) {[m
+     ws.getRow(rr).height = 18;[m
+[31m-    setRowStyle(ws, rr, { font: { size: 11, name: 'Yu Gothic' }, alignment: { vertical: 'middle' } });[m
+[32m+[m[32m    setRowStyle(ws, rr, { font: { size: 11, name: 'Yu Gothic' }, alignment: { vertical: 'middle' }, fill: THEME.headerFill as any });[m
+   }[m
+   for (const addr of ['A2', 'A3', 'A4', 'A5', 'A6', 'C6']) {[m
+     ws.getCell(addr).font = { bold: true, size: 11, name: 'Yu Gothic' };[m
+[1mdiff --git a/src/app/day-detail/page.tsx b/src/app/day-detail/page.tsx[m
+[1mindex f250142..b834024 100644[m
+[1m--- a/src/app/day-detail/page.tsx[m
+[1m+++ b/src/app/day-detail/page.tsx[m
+[36m@@ -240,6 +240,8 @@[m [mconst styles: Record<string, React.CSSProperties> = {[m
+             'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',[m
+         background: "#f3f6fb",[m
+         minHeight: "100vh",[m
+[32m+[m[32m    maxWidth: 1200,[m
+[32m+[m[32m    margin: "0 auto",[m
+         fontSize: 15, // ✅ +2 (từ ~13 lên 15)[m
+     },[m
+ [m
+[1mdiff --git a/src/app/day-list/page.tsx b/src/app/day-list/page.tsx[m
+[1mindex aef17d5..c51723b 100644[m
+[1m--- a/src/app/day-list/page.tsx[m
+[1m+++ b/src/app/day-list/page.tsx[m
+[36m@@ -328,6 +328,8 @@[m [mconst styles: Record<string, React.CSSProperties> = {[m
+       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',[m
+     background: "#f3f6fb",[m
+     minHeight: "100vh",[m
+[32m+[m[32m    maxWidth: 1200,[m
+[32m+[m[32m    margin: "0 auto",[m
+     fontSize: 15,[m
+   },[m
+ [m
+[1mdiff --git a/src/app/genba/[site]/[reporter]/page.tsx b/src/app/genba/[site]/[reporter]/page.tsx[m
+[1mindex 4bd27d8..b7728e6 100644[m
+[1m--- a/src/app/genba/[site]/[reporter]/page.tsx[m
+[1m+++ b/src/app/genba/[site]/[reporter]/page.tsx[m
+[36m@@ -97,9 +97,11 @@[m [mexport default async function WorkerDayPage(props: {[m
+ [m
+ const styles: Record<string, React.CSSProperties> = {[m
+   page: {[m
+[31m-    padding: 16,[m
+[32m+[m[32m    padding: "clamp(12px, 3vw, 20px)",[m
+     background: "#f3f6fb",[m
+     minHeight: "100vh",[m
+[32m+[m[32m    maxWidth: 1200,[m
+[32m+[m[32m    margin: "0 auto",[m
+     fontFamily:[m
+       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',[m
+     color: "#111",[m
+[1mdiff --git a/src/app/genba/_components/GenbaListClient.tsx b/src/app/genba/_components/GenbaListClient.tsx[m
+[1mindex 859b874..7555c32 100644[m
+[1m--- a/src/app/genba/_components/GenbaListClient.tsx[m
+[1m+++ b/src/app/genba/_components/GenbaListClient.tsx[m
+[36m@@ -81,7 +81,8 @@[m [mexport default function GenbaListClient(props: {[m
+       <div style={styles.card}>[m
+         <div style={styles.cardTitle}>工事一覧（site_name で自動集計）</div>[m
+ [m
+[31m-        <div style={styles.table}>[m
+[32m+[m[32m        <div style={styles.tableScroll} className="scroll-x">[m
+[32m+[m[32m          <div style={styles.table}>[m
+           {/* header top */}[m
+           <div style={{ ...styles.row, ...styles.rowHeadTop }}>[m
+             <div style={{ ...styles.cell, width: 220 }}>現場名</div>[m
+[36m@@ -153,6 +154,7 @@[m [mexport default function GenbaListClient(props: {[m
+             <div style={{ ...styles.cell, width: 150, borderRight: "none", fontWeight: 900 }}>{totals.remAll}</div>[m
+           </div>[m
+         </div>[m
+[32m+[m[32m          </div>[m
+ [m
+         <div style={{ marginTop: 10, opacity: 0.8, fontWeight: 800 }}>[m
+           ※ 行全体クリックで詳細へ（どこを押してもOK）[m
+[36m@@ -164,9 +166,11 @@[m [mexport default function GenbaListClient(props: {[m
+ [m
+ const styles: Record<string, React.CSSProperties> = {[m
+   page: {[m
+[31m-    padding: 16,[m
+[32m+[m[32m    padding: "clamp(12px, 3vw, 20px)",[m
+     background: "#f3f6fb",[m
+     minHeight: "100vh",[m
+[32m+[m[32m    maxWidth: 1200,[m
+[32m+[m[32m    margin: "0 auto",[m
+     fontFamily:[m
+       'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',[m
+     color: "#111",[m
+[36m@@ -229,6 +233,7 @@[m [mconst styles: Record<string, React.CSSProperties> = {[m
+   cardTitle: { fontSize: 18, fontWeight: 900, marginBottom: 10 },[m
+ [m
+   table: { border: "2px solid #111", borderRadius: 10, overflow: "hidden" },[m
+[32m+[m[32m  tableScroll: { marginTop: 10, borderRadius: 10, maxWidth: "100%", overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch" },[m
+   row: { disp

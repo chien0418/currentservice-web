@@ -24,3 +24,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* =======================
+   Report UI helpers
+   (inline-style project; keep CSS minimal)
+======================= */
+html, body {
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Improve horizontal scroll on mobile */
+.scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optional: hide scrollbar on WebKit while still scrollable */
+.scroll-x::-webkit-scrollbar {
+  height: 10px;
+}
