@@ -208,32 +208,7 @@ export default function SiteDetailClient(props: {
           {msg ? <div style={{ fontWeight: 900 }}>{msg}</div> : null}
         </div>
 
-        {/* bảng đúng ảnh: 3 cột 予定/現在/残り ; 3 dòng 現場/製造/総合★数 */}
-        <div style={{ marginTop: 14, border: "2px solid #111", borderRadius: 10, overflow: "hidden" }}>
-          <div style={{ ...styles.row, background: "#f6d7c8", borderBottom: "2px solid #111" }}>
-            <div style={{ ...styles.cell, width: 200 }} />
-            <div style={{ ...styles.cell, width: 200 }}>予定★数</div>
-            <div style={{ ...styles.cell, width: 200 }}>現在★数</div>
-            <div style={{ ...styles.cell, width: 200, borderRight: "none" }}>残り★数</div>
-          </div>
-
-          {[
-            { name: "現場", p: planG, n: nowG, r: remG, tone: styles.colGenba },
-            { name: "製造", p: planS, n: nowS, r: remS, tone: styles.colSeizo },
-            { name: "総合★数", p: planAll, n: nowAll, r: remAll, bold: true, tone: {} },
-          ].map((x) => (
-            <div key={x.name} style={{ ...styles.row, borderBottom: "1px solid #111" }}>
-              <div style={{ ...styles.cell, width: 200, fontWeight: 900, ...(x.tone as any) }}>{x.name}</div>
-              <div style={{ ...styles.cell, width: 200, fontWeight: x.bold ? 900 : 800 }}>{x.p}</div>
-              <div style={{ ...styles.cell, width: 200, fontWeight: x.bold ? 900 : 800 }}>{x.n}</div>
-              <div style={{ ...styles.cell, width: 200, borderRight: "none", fontWeight: x.bold ? 900 : 800 }}>
-                {x.r}
-              </div>
-            </div>
-          ))}
-        </div>
-
-{/* 進捗パイプ（現場／製造）: 緑=達成、黄=残り(予定100%)、超過は下に赤(最大200%) */}
+        {/* 進捗パイプ（現場／製造）: 緑=達成、黄=残り(予定100%)、超過は下に赤(最大200%) */}
         <div style={styles.pipeGrid}>
           <PipeProgress label="現場" plan={planG} now={nowG} tone="genba" />
           <PipeProgress label="製造" plan={planS} now={nowS} tone="seizo" />
@@ -246,41 +221,41 @@ export default function SiteDetailClient(props: {
         <div style={styles.cardTitle}>作業者</div>
 
         <div style={styles.tableScroll} className="scroll-x">
-            <div style={styles.table}>
-          <div style={{ ...styles.row, background: "#cfe8ff", borderBottom: "2px solid #111", fontWeight: 900 }}>
-            <div style={{ ...styles.cell, ...styles.stickyColHeader, width: 260 }}>作業者</div>
-            <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>現場★数</div>
-            <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>製造★数</div>
-            <div style={{ ...styles.cell, width: 160, borderRight: "none" }}>総合★数</div>
-          </div>
+          <div style={styles.table}>
+            <div style={{ ...styles.row, background: "#cfe8ff", borderBottom: "2px solid #111", fontWeight: 900 }}>
+              <div style={{ ...styles.cell, ...styles.stickyColHeader, width: 260 }}>作業者</div>
+              <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>現場★数</div>
+              <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>製造★数</div>
+              <div style={{ ...styles.cell, width: 160, borderRight: "none" }}>総合★数</div>
+            </div>
 
-          {props.workers.map((w, i) => {
-            const href = `/genba/${encodeURIComponent(props.site_name)}/${encodeURIComponent(w.reporter_name)}`;
-            return (
-              <Link
-                key={w.reporter_name}
-                href={href}
-                style={{
-                  ...styles.rowLink,
-                  background: i % 2 === 0 ? "#fff" : "#fbfdff",
-                }}
-              >
-                <div style={{ ...styles.cell, ...styles.stickyCol, width: 260, fontWeight: 900 }}>{w.reporter_name}</div>
-                <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>{w.genba}</div>
-                <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>{w.seizo}</div>
-                <div style={{ ...styles.cell, width: 160, borderRight: "none", fontWeight: 900 }}>{w.total}</div>
-              </Link>
-            );
-          })}
+            {props.workers.map((w, i) => {
+              const href = `/genba/${encodeURIComponent(props.site_name)}/${encodeURIComponent(w.reporter_name)}`;
+              return (
+                <Link
+                  key={w.reporter_name}
+                  href={href}
+                  style={{
+                    ...styles.rowLink,
+                    background: i % 2 === 0 ? "#fff" : "#fbfdff",
+                  }}
+                >
+                  <div style={{ ...styles.cell, ...styles.stickyCol, width: 260, fontWeight: 900 }}>{w.reporter_name}</div>
+                  <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>{w.genba}</div>
+                  <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>{w.seizo}</div>
+                  <div style={{ ...styles.cell, width: 160, borderRight: "none", fontWeight: 900 }}>{w.total}</div>
+                </Link>
+              );
+            })}
 
-          <div style={{ ...styles.row, background: "#f0f0f0", borderTop: "2px solid #111" }}>
-            <div style={{ ...styles.cell, width: 260, fontWeight: 900 }}>総合</div>
-            <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>{workerTotal.g}</div>
-            <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>{workerTotal.s}</div>
-            <div style={{ ...styles.cell, width: 160, borderRight: "none", fontWeight: 900 }}>{workerTotal.all}</div>
+            <div style={{ ...styles.row, background: "#f0f0f0", borderTop: "2px solid #111" }}>
+              <div style={{ ...styles.cell, width: 260, fontWeight: 900 }}>総合</div>
+              <div style={{ ...styles.cell, ...styles.colGenba, width: 160 }}>{workerTotal.g}</div>
+              <div style={{ ...styles.cell, ...styles.colSeizo, width: 160 }}>{workerTotal.s}</div>
+              <div style={{ ...styles.cell, width: 160, borderRight: "none", fontWeight: 900 }}>{workerTotal.all}</div>
+            </div>
           </div>
         </div>
-            </div>
 
         <div style={{ marginTop: 10, opacity: 0.75, fontWeight: 800 }}>
           ※ 行全体クリックで日別へ
@@ -410,7 +385,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   colGenba: { background: "linear-gradient(90deg,#dbeafe 0%,#bfdbfe 50%,#dbeafe 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
-  colSeizo: { background: "linear-gradient(90deg,#fef3c7 0%,#fde68a 50%,#fef3c7 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
+  colSeizo: { background: "linear-gradient(90deg,#fef3c7 0%,#fde68a 50%,#fef3c7 100%)", boxShadow: "inset 0 1px 0 rgba(82, 26, 26, 0.6), inset 0 -1px 0 rgba(0,0,0,.08)" },
 
 
   // --- Pipe progress (現場/製造) ---
@@ -466,7 +441,7 @@ const styles: Record<string, React.CSSProperties> = {
   pipeOverLabel: { background: "#ffe4e6" },
   pipeOver: {
     height: "100%",
-    background: "linear-gradient(90deg, rgba(239,68,68,.25) 0%, rgba(239,68,68,.85) 50%, rgba(239,68,68,.25) 100%)",
+    background: "linear-gradient(90deg, rgba(239,68,68,.25) 0%, rgba(222, 67, 67, 0.85) 50%, rgba(239,68,68,.25) 100%)",
   },
   pipeGenba: { background: "#dbeafe" },
   pipeSeizo: { background: "#fef3c7" },

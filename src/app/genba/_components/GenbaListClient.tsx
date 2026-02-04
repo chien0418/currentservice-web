@@ -85,7 +85,7 @@ export default function GenbaListClient(props: {
           <div style={styles.table}>
           {/* header top */}
           <div style={{ ...styles.row, ...styles.rowHeadTop }}>
-            <div style={{ ...styles.cell, width: 220 }}>現場名</div>
+            <div style={{ ...styles.cell, width: 210 }}>現場名</div>
             <div style={{ ...styles.cellGroup, width: 450 }}>予定★数</div>
             <div style={{ ...styles.cellGroup, width: 450 }}>現在★数</div>
             <div style={{ ...styles.cellGroup, width: 450, borderRight: "none" }}>残り★数</div>
@@ -236,7 +236,7 @@ const styles: Record<string, React.CSSProperties> = {
   tableScroll: { marginTop: 10, borderRadius: 10, maxWidth: "100%", overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch" },
   row: { display: "flex", alignItems: "stretch" },
   rowHeadTop: { background: "#f6d7c8", borderBottom: "2px solid #111", fontWeight: 900 },
-  rowHeadSub: { background: "#cfe8ff", borderBottom: "2px solid #111", fontWeight: 900 },
+  rowHeadSub: { background: "#fff", borderBottom: "2px solid #111", fontWeight: 900 },
   rowLink: {
     display: "flex",
     alignItems: "stretch",

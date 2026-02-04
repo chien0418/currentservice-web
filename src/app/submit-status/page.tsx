@@ -316,7 +316,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   tableWrap: {
     maxWidth: "100%",
-    overflow: "auto",
+    overflow: "hidden",
     borderRadius: 12,
     border: "2px solid #111",
   },
@@ -348,6 +348,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRight: "1px solid #d7d7d7",
     fontWeight: 800,
     whiteSpace: "nowrap",
+    flex: "0 0 auto",
   },
   stickyLeft1: {
     position: "sticky",

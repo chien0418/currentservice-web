@@ -49,3 +49,24 @@ html, body {
 .scroll-x::-webkit-scrollbar {
   height: 10px;
 }
+
+
+/* === FIX horizontal scroll for all tables (mobile) === */
+
+.scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+.table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.cell {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
