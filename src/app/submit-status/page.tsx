@@ -73,6 +73,25 @@ type DayHeaderRow = {
   leave_type: string | null;
 };
 
+function normalizeDayHeaderRow(raw: any): DayHeaderRow {
+  const workMinutes = Number(raw?.work_minutes ?? raw?.total_minutes ?? 0);
+  const startHm = (raw?.start_hm ?? raw?.min_start_hm ?? raw?.start_time ?? null) as any;
+  const endHm = (raw?.end_hm ?? raw?.max_end_hm ?? raw?.end_time ?? null) as any;
+  const totalStars =
+    raw?.total_stars != null ? Number(raw.total_stars) : Math.floor(Math.max(0, workMinutes) / 15);
+  const leaveType = (raw?.leave_type ?? null) as any;
+  return {
+    reporter_name: raw?.reporter_name,
+    ymd: raw?.ymd,
+    start_hm: startHm,
+    end_hm: endHm,
+    work_minutes: workMinutes,
+    total_stars: totalStars,
+    leave_type: leaveType,
+  };
+}
+
+
 // NOTE:
 //  - DB側に「submitted」フラグがある場合はそれを使うのが正しい。
 //  - このプロジェクトの公開済みWebでは、日別ヘッダ（v_manager_worker_day_header_app）を参照して
@@ -142,14 +161,13 @@ export default async function SubmitStatusPage(props: {
   // NOTE: filter by ymd range only; we join by reporter_name client-side
   const { data: dData, error: dErr } = await supabase
     .from("v_manager_worker_day_header_app")
-    .select(
-      "reporter_name, ymd, start_hm, end_hm, work_minutes, total_stars, leave_type"
-    )
+    .select("*")
     .gte("ymd", startYmd)
     .lte("ymd", endYmd);
 
   if (dErr) return <pre>{JSON.stringify(dErr, null, 2)}</pre>;
-  const dayRows = (dData ?? []) as DayHeaderRow[];
+  const dayRows = (dData ?? []).map(normalizeDayHeaderRow)
+as DayHeaderRow[];
 
   // Index: reporter -> ymd -> row
   const idx = new Map<string, Map<string, DayHeaderRow>>();

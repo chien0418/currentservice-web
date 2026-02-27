@@ -27,6 +27,29 @@ function hhmmToMinutes(hhmm?: string | null) {
 }
 
 
+
+function starsToMinutes(stars?: number | null) {
+  return Math.max(0, Number(stars ?? 0)) * 15;
+}
+
+function normalizeWorkMinutes(row: { work_hm?: string | null; total_stars?: number | null }) {
+  const minsFromStars = starsToMinutes(row.total_stars);
+  const minsFromWork = hhmmToMinutes(row.work_hm);
+  if (minsFromStars > 0 && (minsFromWork === 0 || Math.abs(minsFromStars - minsFromWork) >= 60)) {
+    return minsFromStars;
+  }
+  return minsFromWork;
+}
+
+function baseHoursByCycle(cycleYm: string) {
+  const [yStr, mStr] = cycleYm.split("-");
+  const y = Number(yStr);
+  const m = Number(mStr);
+  if (!y || !m) return 171;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return days === 31 ? 177 : 171;
+}
+
 function ymdToSheetName(ymd: string) {
   // YYYY-MM-DD -> MM-DD
   const a = String(ymd).split("-");
@@ -141,6 +164,21 @@ type DayHeader = {
   total_km: number;
   leave_type: string | null;
 };
+
+function normalizeExcelHeader(raw: any): DayHeader {
+  return {
+    reporter_name: raw?.reporter_name,
+    ymd: raw?.ymd,
+    cycle_ym: raw?.cycle_ym ?? raw?.cycleYm ?? null,
+    start_hm: raw?.start_hm ?? raw?.min_start_hm ?? raw?.start_time ?? "",
+    end_hm: raw?.end_hm ?? raw?.max_end_hm ?? raw?.end_time ?? "",
+    exclude_minutes: Number(raw?.exclude_minutes ?? raw?.total_exclude_minutes ?? 0),
+    work_minutes: Number(raw?.work_minutes ?? raw?.total_minutes ?? 0),
+    total_km: Number(raw?.total_km ?? raw?.total_km_sum ?? raw?.km ?? 0),
+    leave_type: raw?.leave_type ?? "",
+  };
+}
+
 
 type DayDetail = {
   reporter_name: string;
@@ -353,8 +391,12 @@ function buildCompanyCycleSheet(ws: ExcelJS.Worksheet, cycleYm: string, rows: Cy
   const filtered = rows.filter((x) => (x.employee_code || x.reporter_name) && String(x.cycle_ym) === cycleYm);
   const sumKm = filtered.reduce((a, b) => a + Number(b.total_km_sum ?? 0), 0);
   const sumStay = filtered.reduce((a, b) => a + Number(b.stay_nights ?? 0), 0);
-  const sumWorkMin = filtered.reduce((a, b) => a + hhmmToMinutes(b.work_hm ?? "0:00"), 0);
-  const sumOtMin = filtered.reduce((a, b) => a + hhmmToMinutes(b.overtime_hm ?? "0:00"), 0);
+  const sumWorkMin = filtered.reduce((a, b) => a + normalizeWorkMinutes(b), 0);
+  const sumOtMin = filtered.reduce((a, b) => {
+    const workMin = normalizeWorkMinutes(b);
+    const baseMin = baseHoursByCycle(cycleYm) * 60;
+    return a + Math.max(0, workMin - baseMin);
+  }, 0);
 
   // Title
   ws.mergeCells("A1:I1");
@@ -401,14 +443,21 @@ function buildCompanyCycleSheet(ws: ExcelJS.Worksheet, cycleYm: string, rows: Cy
 
   let r = head + 1;
   filtered.forEach((x, i) => {
+    const workMin = normalizeWorkMinutes(x);
+    const baseMin = baseHoursByCycle(cycleYm) * 60;
+    const reqMin = hhmmToMinutes(x.required_hm ?? "0:00");
+    const displayWorkHm = minutesToHHMM(workMin);
+    const displayOvertimeHm = minutesToHHMM(Math.max(0, workMin - baseMin));
+    const displayRemainHm = minutesToHHMM(Math.max(0, reqMin - workMin));
+
     ws.getRow(r).values = [
       i + 1,
       x.employee_code ?? "",
       x.user_name?.trim() ? x.user_name : x.reporter_name,
-      x.work_hm ?? "0:00",
-      x.overtime_hm ?? "0:00",
+      displayWorkHm,
+      displayOvertimeHm,
       x.required_hm ?? "0:00",
-      x.remain_hm ?? "0:00",
+      displayRemainHm,
       Number(x.total_km_sum ?? 0).toFixed(1),
       `${x.stay_nights ?? 0}`,
     ];
@@ -896,12 +945,12 @@ export async function GET(req: Request) {
 
       const { data: hData, error: hErr } = await supabase
         .from("v_manager_worker_day_header_app")
-        .select("reporter_name, ymd, cycle_ym, start_hm, end_hm, exclude_minutes, work_minutes, total_km, leave_type")
+        .select("*")
         .eq("reporter_name", reporter_name)
         .eq("ymd", ymd)
         .limit(1);
       if (hErr) return NextResponse.json(hErr, { status: 500 });
-      const header = (hData?.[0] ?? null) as DayHeader | null;
+      const header = hData?.[0] ? normalizeExcelHeader(hData[0]) : null;
       if (!header) return NextResponse.json({ error: "no header" }, { status: 404 });
 
       const { data: dData, error: dErr } = await supabase
@@ -943,7 +992,7 @@ export async function GET(req: Request) {
       // Fetch all day headers within cycle for this worker
       const { data: hRows, error: e0 } = await supabase
         .from("v_manager_worker_day_header_app")
-        .select("reporter_name, ymd, cycle_ym, start_hm, end_hm, exclude_minutes, work_minutes, total_km, leave_type")
+        .select("*")
         .eq("reporter_name", reporter_name)
         .gte("ymd", startYmd)
         .lte("ymd", endYmd)

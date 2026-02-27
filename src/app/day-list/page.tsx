@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import ExportExcelMenu from "@/app/_components/ExportExcelMenu";
@@ -21,6 +24,20 @@ function hhmmToMinutes(hhmm?: string | null) {
   return Math.max(0, hh * 60 + mm);
 }
 
+
+function starsToMinutes(stars?: number | null) {
+  return Math.max(0, Number(stars ?? 0)) * 15;
+}
+
+function normalizeWorkHm(work_hm?: string | null, total_stars?: number | null) {
+  const minsFromStars = starsToMinutes(total_stars);
+  const minsFromWork = hhmmToMinutes(work_hm);
+  // If stars exist and work_hm is missing/zero or clearly inconsistent, trust stars.
+  if (minsFromStars > 0 && (minsFromWork === 0 || Math.abs(minsFromStars - minsFromWork) >= 60)) {
+    return minutesToHHMM(minsFromStars);
+  }
+  return work_hm ?? "0:00";
+}
 function jpDate(ymd: string) {
   return ymd.replaceAll("-", "/");
 }
@@ -63,7 +80,7 @@ function baseHoursByCycle(cycleYm: string) {
   const [yStr, mStr] = cycleYm.split("-");
   const y = Number(yStr);
   const m = Number(mStr);
-  if (!y || !m) return 171;
+  if (!y || !m) return 177;
   // days in month
   const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
   return days === 31 ? 177 : 171;
@@ -104,6 +121,31 @@ type DayRow = {
   leave_type: string | null;
 };
 
+function normalizeDayRow(raw: any) {
+  const workMinutes = Number(raw?.work_minutes ?? raw?.total_minutes ?? 0);
+  const startHm =
+    (raw?.start_hm ?? raw?.min_start_hm ?? raw?.start_time ?? "") as string;
+  const endHm =
+    (raw?.end_hm ?? raw?.max_end_hm ?? raw?.end_time ?? "") as string;
+  const excludeMinutes = Number(raw?.exclude_minutes ?? raw?.total_exclude_minutes ?? 0);
+  const totalKm = Number(raw?.total_km ?? raw?.total_km_sum ?? raw?.km ?? 0);
+  const totalStars =
+    raw?.total_stars != null ? Number(raw.total_stars) : Math.floor(Math.max(0, workMinutes) / 15);
+  const leaveType = (raw?.leave_type ?? "") as string;
+  return {
+    reporter_name: raw?.reporter_name as string,
+    ymd: raw?.ymd as string,
+    start_hm: startHm,
+    end_hm: endHm,
+    exclude_minutes: excludeMinutes,
+    work_minutes: workMinutes,
+    total_km: totalKm,
+    total_stars: totalStars,
+    leave_type: leaveType,
+  } as DayRow;
+}
+
+
 export default async function DayList(props: {
   searchParams?: Promise<{ reporter_name?: string; cycle_ym?: string }>;
 }) {
@@ -142,34 +184,66 @@ export default async function DayList(props: {
   if (hErr) return <pre>{JSON.stringify(hErr, null, 2)}</pre>;
   const header = (hData?.[0] ?? null) as HeaderRow | null;
 
+
+// ======= 補正: 規定時間が 0:00 の場合は cycle_required_time から補完 =======
+let requiredMinutesFallback = 0;
+if (!header?.required_hm || header.required_hm === "0:00") {
+  const { data: reqRows, error: reqErr } = await supabase
+    .from("cycle_required_time")
+    .select("required_minutes")
+    .eq("cycle_ym", cycle_ym)
+    .eq("reporter_name", reporter_name)
+    .limit(1);
+  if (!reqErr) {
+    requiredMinutesFallback = Number((reqRows?.[0] as any)?.required_minutes ?? 0);
+  }
+}
+
+
   // Day rows (ASC within cycle)
   const { data, error } = await supabase
     .from("v_manager_worker_day_header_app")
-    .select(
-      "reporter_name, ymd, start_hm, end_hm, exclude_minutes, work_minutes, total_km, total_stars, leave_type"
-    )
+    .select("*")
     .eq("reporter_name", reporter_name)
     .gte("ymd", startYmd)
     .lte("ymd", endYmd)
     .order("ymd", { ascending: true });
 
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
-  const rows = (data ?? []) as DayRow[];
+  const rows = (data ?? []).map(normalizeDayRow) as DayRow[];
 
   const baseHours = baseHoursByCycle(cycle_ym);
   // ✅ 総★ は「勤務時間（work_hm）」から計算（15分=1★）
-  const workStars = Math.floor(hhmmToMinutes(header?.work_hm) / 15);
+    const displayWorkHm = normalizeWorkHm(header?.work_hm, header?.total_stars);
+  const workStars = header?.total_stars ?? Math.floor(hhmmToMinutes(displayWorkHm) / 15);
 
+
+
+const workMinutes = starsToMinutes(workStars);
+const requiredMinutes = hhmmToMinutes(header?.required_hm) || requiredMinutesFallback;
+const displayRequiredHm = minutesToHHMM(requiredMinutes);
+const displayRemainHm = minutesToHHMM(Math.max(0, requiredMinutes - workMinutes));
   const displayName =
     header?.user_name && String(header.user_name).trim()
       ? header.user_name
       : reporter_name;
+
+
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  let supaProject = "";
+  try { supaProject = supaUrl ? new URL(supaUrl).hostname.split(".")[0] : ""; } catch {}
 
   return (
     <main style={styles.page}>
       {/* ======= TOP HEADER ======= */}
       <div style={styles.topHeader}>
         <div style={styles.topTitle}>日別一覧</div>
+
+        {process.env.NODE_ENV === "development" && supaUrl ? (
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+            Supabase: {supaProject} / {supaUrl}
+          </div>
+        ) : null}
 
         <div style={styles.topMetaRow}>
           <div style={styles.bigName}>作業者：{displayName}</div>
@@ -191,7 +265,7 @@ export default async function DayList(props: {
 
           <div style={styles.statBox}>
             <div style={styles.statLabel}>勤務時間</div>
-            <div style={styles.statValue}>{header?.work_hm ?? "0:00"}</div>
+            <div style={styles.statValue}>{displayWorkHm}</div>
           </div>
 
           <div style={styles.statBox}>
@@ -201,12 +275,12 @@ export default async function DayList(props: {
 
           <div style={styles.statBox}>
             <div style={styles.statLabel}>規定時間</div>
-            <div style={styles.statValue}>{header?.required_hm ?? "0:00"}</div>
+            <div style={styles.statValue}>{displayRequiredHm}</div>
           </div>
 
           <div style={styles.statBox}>
             <div style={styles.statLabel}>残り時間</div>
-            <div style={styles.statValue}>{header?.remain_hm ?? "0:00"}</div>
+            <div style={styles.statValue}>{displayRemainHm}</div>
           </div>
 
           <div style={styles.statBox}>

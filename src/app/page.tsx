@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
@@ -21,6 +24,28 @@ function hhmmToMinutes(hhmm?: string | null) {
   const hh = Number(m[1]);
   const mm = Number(m[2]);
   return Math.max(0, hh * 60 + mm);
+}
+
+function baseHoursByCycle(cycleYm: string) {
+  // 基本時間:
+  //   - 31日の月 => 177h
+  //   - それ以外 => 171h
+  const [yStr, mStr] = cycleYm.split("-");
+  const y = Number(yStr);
+  const m = Number(mStr);
+  if (!y || !m) return 171;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return days === 31 ? 177 : 171;
+}
+
+function normalizeWorkMinutes(r: { total_stars?: number | null; work_hm?: string | null }) {
+  const minsFromStars = Math.max(0, Number(r.total_stars ?? 0)) * 15;
+  const minsFromWork = hhmmToMinutes(r.work_hm);
+  // If stars exist and work_hm is missing/zero or clearly inconsistent, trust stars.
+  if (minsFromStars > 0 && (minsFromWork === 0 || Math.abs(minsFromStars - minsFromWork) >= 60)) {
+    return minsFromStars;
+  }
+  return minsFromWork;
 }
 
 function formatCycleRange(cycleYm: string) {
@@ -110,15 +135,54 @@ export default async function Home(props: {
 
   const rows = (data ?? []) as Row[];
 
+
+// ======= 補正: 規定時間が 0:00 の場合は cycle_required_time から補完 =======
+const needReq = rows.filter((r) => !r.required_hm || r.required_hm === "0:00").map((r) => r.reporter_name);
+let reqMap = new Map<string, number>(); // reporter_name -> required_minutes
+if (needReq.length > 0) {
+  const { data: reqRows, error: reqErr } = await supabase
+    .from("cycle_required_time")
+    .select("reporter_name, required_minutes")
+    .eq("cycle_ym", cycle_ym)
+    .in("reporter_name", needReq);
+  if (!reqErr) {
+    for (const rr of reqRows ?? []) {
+      reqMap.set((rr as any).reporter_name, Number((rr as any).required_minutes ?? 0));
+    }
+  }
+}
+
+// ======= 表示用に各行を補正（UIはそのまま） =======
+const rowsDisplay = rows.map((r) => {
+  const workMinutes = normalizeWorkMinutes(r);
+  const baseMinutes = baseHoursByCycle(cycle_ym) * 60;
+  const requiredMinutesFromView = hhmmToMinutes(r.required_hm);
+  const requiredMinutes = requiredMinutesFromView > 0 ? requiredMinutesFromView : (reqMap.get(r.reporter_name) ?? 0);
+  const remainMinutes = Math.max(0, requiredMinutes - workMinutes);
+  const overtimeMinutes = Math.max(0, workMinutes - baseMinutes);
+  return {
+    ...r,
+    work_hm: minutesToHHMM(workMinutes),
+    overtime_hm: minutesToHHMM(overtimeMinutes),
+    required_hm: minutesToHHMM(requiredMinutes),
+    remain_hm: minutesToHHMM(remainMinutes),
+  } as Row;
+});
+
+
   // ======= header summary (会社集計) =======
-  const totalWorkMinutes = rows.reduce((a, r) => a + hhmmToMinutes(r.work_hm), 0);
+  const totalWorkMinutes = rows.reduce((a, r) => a + normalizeWorkMinutes(r), 0);
   const totalWorkHm = minutesToHHMM(totalWorkMinutes);
-  const totalKm = rows.reduce((a, r) => a + Number(r.total_km_sum ?? 0), 0);
-  const totalStay = rows.reduce((a, r) => a + Number(r.stay_nights ?? 0), 0);
+  const totalKm = rowsDisplay.reduce((a, r) => a + Number(r.total_km_sum ?? 0), 0);
+  const totalStay = rowsDisplay.reduce((a, r) => a + Number(r.stay_nights ?? 0), 0);
   const employeeSet = new Set(
-    rows.map((r) => (r.employee_code && String(r.employee_code).trim() ? r.employee_code : r.reporter_name))
+    rowsDisplay.map((r) => (r.employee_code && String(r.employee_code).trim() ? r.employee_code : r.reporter_name))
   );
   const totalEmployees = employeeSet.size;
+
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  let supaProject = "";
+  try { supaProject = supaUrl ? new URL(supaUrl).hostname.split(".")[0] : ""; } catch {}
 
 
 
@@ -197,7 +261,7 @@ export default async function Home(props: {
       <div style={styles.card}>
         <div style={styles.cardTitle}>作業者一覧</div>
 
-        {rows.length === 0 ? (
+        {rowsDisplay.length === 0 ? (
           <div style={styles.empty}>データなし</div>
         ) : (
           <div style={styles.table}>
@@ -215,13 +279,21 @@ export default async function Home(props: {
 
             </div>
 
-            {rows.map((r, i) => {
+            {rowsDisplay.map((r, i) => {
               const name =
                 r.user_name && String(r.user_name).trim() ? r.user_name : r.reporter_name;
               const code = r.employee_code ?? "";
               const href = `/day-list?reporter_name=${encodeURIComponent(
                 r.reporter_name
               )}&cycle_ym=${encodeURIComponent(cycle_ym)}`;
+
+              // Normalize display values (防止: ★と勤務時間の不整合)
+              const workMinutes = normalizeWorkMinutes(r);
+              const baseMinutes = baseHoursByCycle(cycle_ym) * 60;
+              const requiredMinutes = hhmmToMinutes(r.required_hm);
+              const displayWorkHm = minutesToHHMM(workMinutes);
+              const displayOvertimeHm = minutesToHHMM(Math.max(0, workMinutes - baseMinutes));
+              const displayRemainHm = minutesToHHMM(Math.max(0, requiredMinutes - workMinutes));
 
               return (
                 <Link
@@ -257,13 +329,13 @@ export default async function Home(props: {
                     {r.required_hm ?? "0:00"}
                   </div>
                   <div style={{ ...styles.cell, width: 130, textAlign: "center" }}>
-                    {r.remain_hm ?? "0:00"}
+                    {displayRemainHm}
                   </div>
                   <div style={{ ...styles.cell, width: 130, textAlign: "center" }}>
-                    {r.work_hm ?? "0:00"}
+                    {displayWorkHm}
                   </div>
                   <div style={{ ...styles.cell, width: 130, textAlign: "center" }}>
-                    {r.overtime_hm ?? "0:00"}
+                    {displayOvertimeHm}
                   </div>
                 </Link>
               );
@@ -271,6 +343,11 @@ export default async function Home(props: {
           </div>
         )}
       </div>
+    {process.env.NODE_ENV === "development" && supaUrl ? (
+        <div style={{ marginTop: 10, fontSize: 12, opacity: 0.7 }}>
+          Supabase: {supaProject} / {supaUrl}
+        </div>
+      ) : null}
     </main>
   );
 }
