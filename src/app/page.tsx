@@ -231,6 +231,15 @@ const rowsDisplay = rows.map((r) => {
             >
               現場管理へ
             </Link>
+
+            {/* 提出管理（会社×日付 グリッド） */}
+            <Link
+              href={`/submit-grid?cycle_ym=${encodeURIComponent(cycle_ym)}`}
+              style={styles.btnInfo}
+            >
+              提出管理へ
+            </Link>
+
             <Link href={`/?cycle_ym=${encodeURIComponent(cycle_ym)}`} style={styles.btnGhost}>
               更新
             </Link>
@@ -476,6 +485,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 900,
     color: "#111",
     background: "#ffd27a",
+    border: "2px solid #111",
+    padding: "10px 14px",
+    borderRadius: 12,
+    whiteSpace: "nowrap",
+  },
+
+  btnInfo: {
+    textDecoration: "none",
+    fontWeight: 900,
+    color: "#111",
+    background: "#dff0ff",
     border: "2px solid #111",
     padding: "10px 14px",
     borderRadius: 12,

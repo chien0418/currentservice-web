@@ -944,7 +944,7 @@ export async function GET(req: Request) {
       }
 
       const { data: hData, error: hErr } = await supabase
-        .from("v_manager_worker_day_header_app")
+        .from("v_manager_day_list_app")
         .select("*")
         .eq("reporter_name", reporter_name)
         .eq("ymd", ymd)
@@ -991,7 +991,7 @@ export async function GET(req: Request) {
 
       // Fetch all day headers within cycle for this worker
       const { data: hRows, error: e0 } = await supabase
-        .from("v_manager_worker_day_header_app")
+        .from("v_manager_day_list_app")
         .select("*")
         .eq("reporter_name", reporter_name)
         .gte("ymd", startYmd)
@@ -1095,7 +1095,7 @@ export async function GET(req: Request) {
       if (!header) return NextResponse.json({ error: "no header" }, { status: 404 });
 
       const { data: dData, error: dErr } = await supabase
-        .from("v_manager_worker_day_header_app")
+        .from("v_manager_day_list_app")
         .select(
           "reporter_name, ymd, start_hm, end_hm, exclude_minutes, work_minutes, total_km, leave_type"
         )

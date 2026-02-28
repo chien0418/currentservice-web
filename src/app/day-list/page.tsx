@@ -202,7 +202,7 @@ if (!header?.required_hm || header.required_hm === "0:00") {
 
   // Day rows (ASC within cycle)
   const { data, error } = await supabase
-    .from("v_manager_worker_day_header_app")
+    .from("v_manager_day_list_app")
     .select("*")
     .eq("reporter_name", reporter_name)
     .gte("ymd", startYmd)
@@ -492,11 +492,13 @@ const styles: Record<string, React.CSSProperties> = {
   tableWrapBlack: {
     border: "2px solid #d71a1a",
     borderRadius: 10,
-    overflow: "hidden",
+    overflowX: "auto",
+    overflowY: "hidden",
   },
 
   rowHead: {
     display: "grid",
+    minWidth: 220 + 150*7,
     gridTemplateColumns: "220px 150px 150px 150px 150px 150px 150px 150px", //khung tiêu đề của bảng 31 ngày
     placeItems: "center", // ✅ center cả dọc + ngang
     background: "#cfe8ff",
@@ -507,6 +509,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   rowLink: { // bảng 31 ngày
     display: "grid",
+    minWidth: 220 + 150*7,
     gridTemplateColumns: "220px 150px 150px 150px 150px 150px 150px 150px",
     placeItems: "center", // ✅ center cả dọc + ngang
     textDecoration: "none",
@@ -525,7 +528,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "10px 10px",
     borderRight: "2px solid #111",
     whiteSpace: "nowrap",
-    overflow: "hidden",
+    overflowX: "auto",
+    overflowY: "hidden",
     textOverflow: "ellipsis",
   },
 
