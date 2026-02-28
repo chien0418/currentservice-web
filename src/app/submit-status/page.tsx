@@ -166,9 +166,7 @@ export default async function SubmitStatusPage(props: {
     .lte("ymd", endYmd);
 
   if (dErr) return <pre>{JSON.stringify(dErr, null, 2)}</pre>;
-  const dayRows = (dData ?? []).map(normalizeDayHeaderRow)
-as DayHeaderRow[];
-
+  const dayRows: DayHeaderRow[] = (dData ?? []).map(normalizeDayHeaderRow);
   // Index: reporter -> ymd -> row
   const idx = new Map<string, Map<string, DayHeaderRow>>();
   for (const r of dayRows) {
@@ -199,78 +197,78 @@ as DayHeaderRow[];
       <div style={styles.card}>
         <div style={styles.tableWrap}>
           <div style={styles.tableScroll} className="scroll-x">
-          <div style={styles.table}>
-            {/* header row */}
-            <div style={{ ...styles.row, ...styles.rowHead }}>
-              <div style={{ ...styles.cell, ...styles.stickyLeft1 }}>社員</div>
-              <div style={{ ...styles.cell, ...styles.stickyLeft2 }}>コード</div>
-              {days.map((ymd) => (
-                <div key={ymd} style={{ ...styles.cell, width: 44, textAlign: "center" }}>
-                  {jpDay(ymd)}
-                </div>
-              ))}
-            </div>
-
-            {/* worker rows */}
-            {workers.map((w, i) => {
-              const name =
-                w.user_name && String(w.user_name).trim()
-                  ? w.user_name
-                  : w.reporter_name;
-              const code = w.employee_code ?? "";
-              const m = idx.get(w.reporter_name) ?? new Map();
-
-              return (
-                <div
-                  key={`${w.reporter_name}-${i}`}
-                  style={{
-                    ...styles.row,
-                    background: i % 2 === 0 ? "#ffffff" : "#fbfdff",
-                  }}
-                >
-                  <div style={{ ...styles.cell, ...styles.stickyLeft1, fontWeight: 900 }}>
-                    {name}
+            <div style={styles.table}>
+              {/* header row */}
+              <div style={{ ...styles.row, ...styles.rowHead }}>
+                <div style={{ ...styles.cell, ...styles.stickyLeft1 }}>社員</div>
+                <div style={{ ...styles.cell, ...styles.stickyLeft2 }}>コード</div>
+                {days.map((ymd) => (
+                  <div key={ymd} style={{ ...styles.cell, width: 44, textAlign: "center" }}>
+                    {jpDay(ymd)}
                   </div>
-                  <div style={{ ...styles.cell, ...styles.stickyLeft2, textAlign: "center" }}>
-                    {code}
-                  </div>
+                ))}
+              </div>
 
-                  {days.map((ymd) => {
-                    const r = m.get(ymd);
-                    const ok = isSubmittedLike(r);
-                    return (
-                      <div
-                        key={`${w.reporter_name}-${ymd}`}
-                        title={ok ? "提出済み（入力あり）" : "未提出（入力なし）"}
-                        style={{
-                          ...styles.cell,
-                          width: 44,
-                          textAlign: "center",
-                          padding: 0,
-                        }}
-                      >
+              {/* worker rows */}
+              {workers.map((w, i) => {
+                const name =
+                  w.user_name && String(w.user_name).trim()
+                    ? w.user_name
+                    : w.reporter_name;
+                const code = w.employee_code ?? "";
+                const m = idx.get(w.reporter_name) ?? new Map();
+
+                return (
+                  <div
+                    key={`${w.reporter_name}-${i}`}
+                    style={{
+                      ...styles.row,
+                      background: i % 2 === 0 ? "#ffffff" : "#fbfdff",
+                    }}
+                  >
+                    <div style={{ ...styles.cell, ...styles.stickyLeft1, fontWeight: 900 }}>
+                      {name}
+                    </div>
+                    <div style={{ ...styles.cell, ...styles.stickyLeft2, textAlign: "center" }}>
+                      {code}
+                    </div>
+
+                    {days.map((ymd) => {
+                      const r = m.get(ymd);
+                      const ok = isSubmittedLike(r);
+                      return (
                         <div
+                          key={`${w.reporter_name}-${ymd}`}
+                          title={ok ? "提出済み（入力あり）" : "未提出（入力なし）"}
                           style={{
-                            height: 28,
-                            margin: 6,
-                            borderRadius: 8,
-                            border: "2px solid #111",
-                            background: ok ? "#9ff0b3" : "#ffb3b3",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: 900,
+                            ...styles.cell,
+                            width: 44,
+                            textAlign: "center",
+                            padding: 0,
                           }}
                         >
-                          {ok ? "✓" : ""}
+                          <div
+                            style={{
+                              height: 28,
+                              margin: 6,
+                              borderRadius: 8,
+                              border: "2px solid #111",
+                              background: ok ? "#9ff0b3" : "#ffb3b3",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 900,
+                            }}
+                          >
+                            {ok ? "✓" : ""}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
