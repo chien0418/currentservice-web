@@ -185,19 +185,19 @@ export default async function DayList(props: {
   const header = (hData?.[0] ?? null) as HeaderRow | null;
 
 
-// ======= 補正: 規定時間が 0:00 の場合は cycle_required_time から補完 =======
-let requiredMinutesFallback = 0;
-if (!header?.required_hm || header.required_hm === "0:00") {
-  const { data: reqRows, error: reqErr } = await supabase
-    .from("cycle_required_time")
-    .select("required_minutes")
-    .eq("cycle_ym", cycle_ym)
-    .eq("reporter_name", reporter_name)
-    .limit(1);
-  if (!reqErr) {
-    requiredMinutesFallback = Number((reqRows?.[0] as any)?.required_minutes ?? 0);
+  // ======= 補正: 規定時間が 0:00 の場合は cycle_required_time から補完 =======
+  let requiredMinutesFallback = 0;
+  if (!header?.required_hm || header.required_hm === "0:00") {
+    const { data: reqRows, error: reqErr } = await supabase
+      .from("cycle_required_time")
+      .select("required_minutes")
+      .eq("cycle_ym", cycle_ym)
+      .eq("reporter_name", reporter_name)
+      .limit(1);
+    if (!reqErr) {
+      requiredMinutesFallback = Number((reqRows?.[0] as any)?.required_minutes ?? 0);
+    }
   }
-}
 
 
   // Day rows (ASC within cycle)
@@ -214,15 +214,15 @@ if (!header?.required_hm || header.required_hm === "0:00") {
 
   const baseHours = baseHoursByCycle(cycle_ym);
   // ✅ 総★ は「勤務時間（work_hm）」から計算（15分=1★）
-    const displayWorkHm = normalizeWorkHm(header?.work_hm, header?.total_stars);
+  const displayWorkHm = normalizeWorkHm(header?.work_hm, header?.total_stars);
   const workStars = header?.total_stars ?? Math.floor(hhmmToMinutes(displayWorkHm) / 15);
 
 
 
-const workMinutes = starsToMinutes(workStars);
-const requiredMinutes = hhmmToMinutes(header?.required_hm) || requiredMinutesFallback;
-const displayRequiredHm = minutesToHHMM(requiredMinutes);
-const displayRemainHm = minutesToHHMM(Math.max(0, requiredMinutes - workMinutes));
+  const workMinutes = starsToMinutes(workStars);
+  const requiredMinutes = hhmmToMinutes(header?.required_hm) || requiredMinutesFallback;
+  const displayRequiredHm = minutesToHHMM(requiredMinutes);
+  const displayRemainHm = minutesToHHMM(Math.max(0, requiredMinutes - workMinutes));
   const displayName =
     header?.user_name && String(header.user_name).trim()
       ? header.user_name
@@ -231,7 +231,7 @@ const displayRemainHm = minutesToHHMM(Math.max(0, requiredMinutes - workMinutes)
 
   const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   let supaProject = "";
-  try { supaProject = supaUrl ? new URL(supaUrl).hostname.split(".")[0] : ""; } catch {}
+  try { supaProject = supaUrl ? new URL(supaUrl).hostname.split(".")[0] : ""; } catch { }
 
   return (
     <main style={styles.page}>
@@ -498,8 +498,8 @@ const styles: Record<string, React.CSSProperties> = {
 
   rowHead: {
     display: "grid",
-    minWidth: 220 + 150*7,
-    gridTemplateColumns: "220px 150px 150px 150px 150px 150px 150px 150px", //khung tiêu đề của bảng 31 ngày
+    minWidth: 220 + 130 * 7,
+    gridTemplateColumns: "220px 130px 130px 130px 130px 130px 130px 130px", //khung tiêu đề của bảng 31 ngày
     placeItems: "center", // ✅ center cả dọc + ngang
     background: "#cfe8ff",
     borderBottom: "2px solid #d81616",
@@ -509,8 +509,8 @@ const styles: Record<string, React.CSSProperties> = {
 
   rowLink: { // bảng 31 ngày
     display: "grid",
-    minWidth: 220 + 150*7,
-    gridTemplateColumns: "220px 150px 150px 150px 150px 150px 150px 150px",
+    minWidth: 220 + 130 * 7,
+    gridTemplateColumns: "220px 130px 130px 130px 130px 130px 130px 130px",
     placeItems: "center", // ✅ center cả dọc + ngang
     textDecoration: "none",
     color: "#111",
@@ -519,10 +519,10 @@ const styles: Record<string, React.CSSProperties> = {
 
   // column presets (balanced)
   cDate: { width: 220, textAlign: "center" },
-  cSmall: { width: 150, textAlign: "center" },
-  cStar: { width: 150, textAlign: "center" },
-  cLeave: { width: 150, textAlign: "center" },
-  cKm: { width: 150, textAlign: "center" },
+  cSmall: { width: 130, textAlign: "center" },
+  cStar: { width: 130, textAlign: "center" },
+  cLeave: { width: 130, textAlign: "center" },
+  cKm: { width: 130, textAlign: "center" },
 
   cell: {
     padding: "10px 10px",
